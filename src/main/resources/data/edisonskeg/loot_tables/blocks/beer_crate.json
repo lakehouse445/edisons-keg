@@ -1,0 +1,24 @@
+{
+	"type": "minecraft:block",
+	"pools": [
+		{
+			"rolls": 1.0,
+			"bonus_rolls": 0.0,
+			"entries": [
+				{
+					"type": "minecraft:item",
+					"name": "edisonskeg:beer_crate",
+					"functions": [
+						{
+							"function": "minecraft:copy_state",
+							"block": "edisonskeg:beer_crate",
+							"properties": [
+								"bottles"
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}
