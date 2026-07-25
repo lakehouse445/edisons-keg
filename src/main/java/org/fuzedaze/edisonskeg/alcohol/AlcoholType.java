@@ -1,6 +1,10 @@
 package org.fuzedaze.edisonskeg.alcohol;
 
+import javax.annotation.Nullable;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.fuzedaze.edisonskeg.EdisonsKeg;
 
 /**
@@ -32,6 +36,9 @@ public final class AlcoholType {
     private final int maxNauseaAmplifier;
     private final float blackoutThresholdUnits;
     private final float blackoutChancePerUnit;
+    /** Resolved lazily from the item registry; see {@link #drinkItem()}. */
+    @Nullable
+    private Item drinkItem;
 
     private AlcoholType(Builder builder) {
         this.id = builder.id;
@@ -52,6 +59,20 @@ public final class AlcoholType {
 
     public String id() {
         return this.id;
+    }
+
+    /**
+     * The bottle item for this drink, looked up by convention: the item is registered
+     * under the same id as the type (see {@link AlcoholTypes}). Lets anything holding a
+     * type — a crate, a recipe result — hand out bottles without hard-coding the item.
+     */
+    public Item drinkItem() {
+        if (this.drinkItem == null) {
+            Item found = ForgeRegistries.ITEMS.getValue(new ResourceLocation(EdisonsKeg.MODID, this.id));
+            if (found != null && found != Items.AIR)
+                this.drinkItem = found;
+        }
+        return this.drinkItem != null ? this.drinkItem : Items.AIR;
     }
 
     // ---------------------------------------------------------------- strength

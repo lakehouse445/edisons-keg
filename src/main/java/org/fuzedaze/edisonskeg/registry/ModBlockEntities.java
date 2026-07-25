@@ -11,10 +11,9 @@ public final class ModBlockEntities {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
             DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, EdisonsKeg.MODID);
 
-    /** Shared by every drink crate; each instance reads its beverage from its block. */
     public static final RegistryObject<BlockEntityType<DrinkCrateBlockEntity>> DRINK_CRATE =
             BLOCK_ENTITIES.register("drink_crate",
-                    () -> BlockEntityType.Builder.of(DrinkCrateBlockEntity::new, ModBlocks.BEER_CRATE.get()).build(null));
+                    () -> BlockEntityType.Builder.of(DrinkCrateBlockEntity::new, ModBlocks.DRINK_CRATE.get()).build(null));
 
     private ModBlockEntities() {
     }

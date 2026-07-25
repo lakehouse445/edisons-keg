@@ -1,7 +1,10 @@
 {
 	"item.edisonskeg.beer": "Bottle of Beer",
-	"block.edisonskeg.beer_crate": "Crate of Beer",
+	"block.edisonskeg.drink_crate": "Crate",
 	"creativetab.edisonskeg.main": "Edison's Keg",
+	"tooltip.edisonskeg.crate_empty": "Empty",
+	"tooltip.edisonskeg.crate_contents": "%s (%s/%s)",
 	"message.edisonskeg.blackout": "You blacked out... (tolerance %s)",
-	"message.edisonskeg.crate_empty": "The crate is empty."
+	"message.edisonskeg.crate_empty": "The crate is empty.",
+	"message.edisonskeg.crate_wrong_drink": "This crate already holds a different drink."
 }

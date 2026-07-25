@@ -1,0 +1,7 @@
+{
+	"parent": "minecraft:block/cube_all",
+	"textures": {
+		"all": "edisonskeg:crate/empty",
+		"particle": "edisonskeg:crate/empty"
+	}
+}

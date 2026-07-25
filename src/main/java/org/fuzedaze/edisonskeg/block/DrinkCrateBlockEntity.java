@@ -1,10 +1,15 @@
 package org.fuzedaze.edisonskeg.block;
 
+import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import org.fuzedaze.edisonskeg.alcohol.AlcoholType;
-import org.fuzedaze.edisonskeg.alcohol.AlcoholTypes;
+import org.fuzedaze.edisonskeg.alcohol.CrateContents;
 import org.fuzedaze.edisonskeg.registry.ModBlockEntities;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -14,31 +19,63 @@ import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 /**
- * Exists so the crate can be drawn by a GeckoLib renderer. The fill level itself lives in
- * the block state ({@link DrinkCrateBlock#BOTTLES}), which the renderer reads to pick the
- * matching geo model. No animations are played.
+ * Holds a crate's {@link CrateContents} and keeps clients in step, since the GeckoLib
+ * renderer picks its model from what is inside. No animations are played.
  */
 public class DrinkCrateBlockEntity extends BlockEntity implements GeoBlockEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+
+    private CrateContents contents = CrateContents.EMPTY;
 
     public DrinkCrateBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.DRINK_CRATE.get(), pos, state);
     }
 
-    /** Which beverage this crate holds, falling back to beer if the block state is odd. */
-    public AlcoholType getAlcoholType() {
-        return getBlockState().getBlock() instanceof DrinkCrateBlock crate
-                ? crate.getAlcoholType()
-                : AlcoholTypes.BEER;
+    public CrateContents getContents() {
+        return this.contents;
     }
 
-    /** How many bottles are left, or a full crate if the state has already been replaced. */
-    public int getBottles() {
-        BlockState state = getBlockState();
-        return state.hasProperty(DrinkCrateBlock.BOTTLES)
-                ? state.getValue(DrinkCrateBlock.BOTTLES)
-                : DrinkCrateBlock.CAPACITY;
+    /** Server-side only; saves and pushes the change out to everyone watching. */
+    public void setContents(CrateContents contents) {
+        this.contents = contents;
+        setChanged();
+
+        if (this.level != null && !this.level.isClientSide)
+            this.level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
     }
+
+    // ------------------------------------------------------------------ persistence
+
+    @Override
+    protected void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
+        this.contents.save(tag);
+    }
+
+    @Override
+    public void load(CompoundTag tag) {
+        super.load(tag);
+        this.contents = CrateContents.load(tag);
+    }
+
+    // ------------------------------------------------------------------ client sync
+
+    @Override
+    public CompoundTag getUpdateTag() {
+        CompoundTag tag = super.getUpdateTag();
+        // Never let this come out empty, or the packet carrying it is dropped and clients
+        // keep showing whatever the crate held before it was emptied.
+        this.contents.saveForSync(tag);
+        return tag;
+    }
+
+    @Nullable
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    // ------------------------------------------------------------------ geckolib
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {

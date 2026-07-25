@@ -18,8 +18,11 @@ public final class ModClientEvents {
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
-        // Registered here so the pose exists well before the first player is rendered.
-        event.enqueueWork(DrinkArmPose::register);
+        // Registered here so the poses exist well before the first player is rendered.
+        event.enqueueWork(() -> {
+            DrinkArmPose.register();
+            CrateArmPose.register();
+        });
     }
 
     private ModClientEvents() {
