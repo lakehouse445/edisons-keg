@@ -1,8 +1,7 @@
 {
-	"parent": "minecraft:block/cube_bottom_top",
+	"parent": "minecraft:block/cube_all",
 	"textures": {
-		"top": "edisonskeg:block/beer_crate_top",
-		"side": "edisonskeg:block/beer_crate_side",
-		"bottom": "edisonskeg:block/beer_crate_bottom"
+		"all": "edisonskeg:crate/beer",
+		"particle": "edisonskeg:crate/beer"
 	}
 }

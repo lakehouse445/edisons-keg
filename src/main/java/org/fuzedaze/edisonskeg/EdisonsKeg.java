@@ -6,6 +6,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.fuzedaze.edisonskeg.network.ModNetworking;
+import org.fuzedaze.edisonskeg.registry.ModBlockEntities;
 import org.fuzedaze.edisonskeg.registry.ModBlocks;
 import org.fuzedaze.edisonskeg.registry.ModCreativeTabs;
 import org.fuzedaze.edisonskeg.registry.ModItems;
@@ -19,6 +20,7 @@ public class EdisonsKeg {
 
         ModBlocks.BLOCKS.register(modBus);
         ModItems.ITEMS.register(modBus);
+        ModBlockEntities.BLOCK_ENTITIES.register(modBus);
         ModCreativeTabs.TABS.register(modBus);
 
         ModNetworking.register();

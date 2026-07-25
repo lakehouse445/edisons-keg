@@ -1,6 +1,7 @@
 package org.fuzedaze.edisonskeg.block;
 
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -13,29 +14,44 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.fuzedaze.edisonskeg.alcohol.AlcoholType;
 
 /**
- * A crate holding bottles of a drink. Right-click to take a bottle; right-click
- * while holding a matching bottle to put it back. The fill level survives being
- * broken and re-placed (copied through the loot table's {@code copy_state} function).
+ * A crate of bottles. Right-click to take one out, right-click holding a matching bottle to
+ * put one back, and the crate visibly empties as it goes: the {@link #BOTTLES} state picks
+ * which geo model is drawn.
+ *
+ * <p>Not beer-specific — construct one with any {@link AlcoholType} and it will look for
+ * that type's crate assets.
  */
-public class BeerCrateBlock extends Block {
+public class DrinkCrateBlock extends Block implements EntityBlock {
     public static final int CAPACITY = 12;
     public static final IntegerProperty BOTTLES = IntegerProperty.create("bottles", 0, CAPACITY);
-    private static final VoxelShape SHAPE = Block.box(1.0D, 0.0D, 1.0D, 15.0D, 14.0D, 15.0D);
+    // Matches the geo model's footprint: GeckoLib draws it centred on the block at floor level.
+    private static final VoxelShape SHAPE = Block.box(2.0D, 0.0D, 1.0D, 15.0D, 12.0D, 15.0D);
 
+    private final AlcoholType type;
     private final Supplier<? extends Item> drink;
 
-    public BeerCrateBlock(Supplier<? extends Item> drink, Properties properties) {
+    public DrinkCrateBlock(AlcoholType type, Supplier<? extends Item> drink, Properties properties) {
         super(properties);
+        this.type = type;
         this.drink = drink;
         registerDefaultState(this.stateDefinition.any().setValue(BOTTLES, CAPACITY));
+    }
+
+    /** The beverage this crate holds; also selects its models and texture. */
+    public AlcoholType getAlcoholType() {
+        return this.type;
     }
 
     @Override
@@ -46,6 +62,18 @@ public class BeerCrateBlock extends Block {
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return SHAPE;
+    }
+
+    @Override
+    public RenderShape getRenderShape(BlockState state) {
+        // Drawn by the GeckoLib block entity renderer rather than a baked JSON model.
+        return RenderShape.ENTITYBLOCK_ANIMATED;
+    }
+
+    @Nullable
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new DrinkCrateBlockEntity(pos, state);
     }
 
     @Override

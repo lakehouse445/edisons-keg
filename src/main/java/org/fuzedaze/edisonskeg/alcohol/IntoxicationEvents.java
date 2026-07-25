@@ -7,6 +7,8 @@ import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.fuzedaze.edisonskeg.EdisonsKeg;
@@ -28,16 +30,52 @@ public final class IntoxicationEvents {
         player.getCapability(IntoxicationProvider.INTOXICATION).ifPresent(intoxication -> intoxication.tick(player));
     }
 
+    // A blacked-out player is unconscious: no drinking, placing, or using anything until
+    // they come round. The client cancels these too so nothing is mispredicted locally.
+    @SubscribeEvent
+    public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
+        cancelIfBlackedOut(event, event.getEntity());
+    }
+
+    @SubscribeEvent
+    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        cancelIfBlackedOut(event, event.getEntity());
+    }
+
+    @SubscribeEvent
+    public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
+        cancelIfBlackedOut(event, event.getEntity());
+    }
+
+    @SubscribeEvent
+    public static void onEntityInteractSpecific(PlayerInteractEvent.EntityInteractSpecific event) {
+        cancelIfBlackedOut(event, event.getEntity());
+    }
+
+    private static void cancelIfBlackedOut(Event event, Player player) {
+        if (player.level().isClientSide)
+            return;
+
+        player.getCapability(IntoxicationProvider.INTOXICATION).ifPresent(intoxication -> {
+            if (intoxication.isBlackedOut())
+                event.setCanceled(true);
+        });
+    }
+
     @SubscribeEvent
     public static void onPlayerClone(PlayerEvent.Clone event) {
-        // Dying sobers you up; only carry intoxication across dimension changes.
-        if (event.isWasDeath())
-            return;
+        boolean died = event.isWasDeath();
 
         event.getOriginal().reviveCaps();
         event.getOriginal().getCapability(IntoxicationProvider.INTOXICATION).ifPresent(oldIntoxication ->
-                event.getEntity().getCapability(IntoxicationProvider.INTOXICATION)
-                        .ifPresent(newIntoxication -> newIntoxication.copyFrom(oldIntoxication)));
+                event.getEntity().getCapability(IntoxicationProvider.INTOXICATION).ifPresent(newIntoxication -> {
+                    // Dying sobers you up, but you don't forget how to hold your drink:
+                    // tolerance is permanent, current intoxication is not.
+                    if (died)
+                        newIntoxication.copyToleranceFrom(oldIntoxication);
+                    else
+                        newIntoxication.copyFrom(oldIntoxication);
+                }));
         event.getOriginal().invalidateCaps();
     }
 

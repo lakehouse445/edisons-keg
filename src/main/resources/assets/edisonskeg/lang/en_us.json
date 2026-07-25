@@ -2,6 +2,6 @@
 	"item.edisonskeg.beer": "Bottle of Beer",
 	"block.edisonskeg.beer_crate": "Crate of Beer",
 	"creativetab.edisonskeg.main": "Edison's Keg",
-	"message.edisonskeg.blackout": "You blacked out...",
+	"message.edisonskeg.blackout": "You blacked out... (tolerance %s)",
 	"message.edisonskeg.crate_empty": "The crate is empty."
 }

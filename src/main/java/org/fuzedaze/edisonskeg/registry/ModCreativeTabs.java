@@ -18,6 +18,8 @@ public final class ModCreativeTabs {
                     .icon(() -> new ItemStack(ModItems.BEER_CRATE.get()))
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.BEER.get());
+                        // Only the full crate is offered; the emptier fill levels are block
+                        // states reached by taking bottles out, not separate items.
                         output.accept(ModItems.BEER_CRATE.get());
                     })
                     .build());

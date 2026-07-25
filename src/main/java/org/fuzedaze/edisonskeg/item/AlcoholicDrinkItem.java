@@ -5,11 +5,14 @@ import java.util.function.Consumer;
 import org.fuzedaze.edisonskeg.alcohol.AlcoholType;
 import org.fuzedaze.edisonskeg.alcohol.IntoxicationProvider;
 import org.fuzedaze.edisonskeg.client.AlcoholicDrinkRenderer;
+import org.fuzedaze.edisonskeg.client.DrinkArmPose;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 
 import net.minecraft.advancements.CriteriaTriggers;
+import javax.annotation.Nullable;
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.server.level.ServerPlayer;
@@ -172,6 +175,19 @@ public class AlcoholicDrinkItem extends Item implements GeoItem {
                                                    ItemStack stack, float partialTick,
                                                    float equipProcess, float swingProcess) {
                 return applyDrinkTransform(pose, player, arm, stack, partialTick);
+            }
+
+            /**
+             * Third person: raise the arm holding the drink while it is being drunk.
+             * Returning null leaves the entity in whatever pose it would normally use.
+             */
+            @Nullable
+            @Override
+            public HumanoidModel.ArmPose getArmPose(LivingEntity entity, InteractionHand hand, ItemStack stack) {
+                boolean drinkingThis = entity.isUsingItem()
+                        && entity.getUsedItemHand() == hand
+                        && entity.getUseItem() == stack;
+                return drinkingThis ? DrinkArmPose.get() : null;
             }
         });
     }
