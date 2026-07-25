@@ -3,6 +3,7 @@ package org.fuzedaze.edisonskeg.block;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Containers;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
@@ -45,8 +46,14 @@ public abstract class AbstractProcessingBlock extends BaseEntityBlock {
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
-        if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof AbstractProcessingBlockEntity machine)
+        if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof AbstractProcessingBlockEntity machine) {
             dropContents(level, pos, machine.getInventory());
+
+            // A latched batch owns items the inventory no longer holds: refund a
+            // mid-ferment batch's ingredients, or drop the drink if the time was up.
+            for (ItemStack stack : machine.dumpBatch())
+                Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
+        }
 
         super.onRemove(state, level, pos, newState, moved);
     }

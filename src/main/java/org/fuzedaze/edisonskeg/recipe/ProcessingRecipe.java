@@ -1,5 +1,6 @@
 package org.fuzedaze.edisonskeg.recipe;
 
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.RegistryAccess;
@@ -75,21 +76,25 @@ public class ProcessingRecipe implements Recipe<Container> {
     }
 
     /**
-     * Removes this recipe's ingredients from the given inventory. Assumes
-     * {@link #matches} already passed for it.
+     * Removes this recipe's ingredients from the given inventory, returning exactly what
+     * was taken so a latched batch can refund it later (e.g. when the machine is broken
+     * mid-ferment). Assumes {@link #matches} already passed for it.
      */
-    public void consumeFrom(IItemHandlerModifiable inventory) {
+    public List<ItemStack> consumeFrom(IItemHandlerModifiable inventory) {
+        List<ItemStack> consumed = new ArrayList<>(this.inputs.size());
         for (CountedIngredient input : this.inputs) {
             for (int slot = 0; slot < inventory.getSlots(); slot++) {
                 ItemStack stack = inventory.getStackInSlot(slot);
                 if (!input.test(stack))
                     continue;
 
+                consumed.add(stack.copyWithCount(input.count()));
                 stack.shrink(input.count());
                 inventory.setStackInSlot(slot, stack.isEmpty() ? ItemStack.EMPTY : stack);
                 break;
             }
         }
+        return consumed;
     }
 
     // ------------------------------------------------------------------ recipe contract
